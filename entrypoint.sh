@@ -88,7 +88,7 @@ fi
 echo "Generated configuration:"
 cat /tmp/redsocks.conf
 
-/fw.sh $redsocks_device $redsocks_port $redsocks_proxy_host $redsocks_proxy_port "$redudp_port" "$redudp_proxy_host" "$redudp_proxy_port" start
+/fw.sh $redsocks_device $redsocks_port $redsocks_proxy_host $redsocks_proxy_port "$redudp_port" "$redudp_proxy_host" "$redudp_proxy_port" "$dnstc_port" start
 
 pid=0
 
@@ -103,7 +103,7 @@ term_handler() {
         echo "Term signal catched. Shutdown redsocks and disable iptables rules..."
         kill -SIGTERM "$pid"
         wait "$pid"
-        /fw.sh $redsocks_device $redsocks_port $redsocks_proxy_host $redsocks_proxy_port "$redudp_port" "$redudp_proxy_host" "$redudp_proxy_port" stop
+        /fw.sh $redsocks_device $redsocks_port $redsocks_proxy_host $redsocks_proxy_port "$redudp_port" "$redudp_proxy_host" "$redudp_proxy_port" "$dnstc_port" stop
     fi
     exit 143; # 128 + 15 -- SIGTERM
 }

@@ -16,6 +16,11 @@ fw_setup() {
 
   iptables -t nat -A REDSOCKS -d $redsocks_proxy_host -p tcp --dport $redsocks_proxy_port -j RETURN
 
+  # dnstc is optional, only set up when dnstc_port is given
+  if [ -n "$dnstc_port" ]; then
+    iptables -t nat -A REDSOCKS -p udp --dport 53 -j REDIRECT --to-ports $dnstc_port
+  fi
+
   # redudp is optional, only set up when redudp_port is given
   if [ -n "$redudp_port" ]; then
     iptables -t nat -A REDSOCKS -d $redudp_proxy_host -p tcp --dport $redudp_proxy_port -j RETURN
@@ -27,7 +32,7 @@ fw_setup() {
 
   # Finally we tell iptables to use the ‘REDSOCKS’ chain for all outgoing connection in the network interface ‘eth0′.
   iptables -t nat -A OUTPUT -o $device -p tcp -j REDSOCKS
-  if [ -n "$redudp_port" ]; then
+  if [ -n "$redudp_port" ] || [ -n "$dnstc_port" ]; then
     iptables -t nat -A OUTPUT -o $device -p udp -j REDSOCKS
   fi
 
@@ -43,10 +48,10 @@ fw_clear() {
 }
 
 usage() {
-  echo "Usage: $0 {device} {redsocks_port} {redsocks_proxy_host} {redsocks_proxy_port} {redudp_port} {redudp_proxy_host} {redudp_proxy_port} {start|stop}"
+  echo "Usage: $0 {device} {redsocks_port} {redsocks_proxy_host} {redsocks_proxy_port} {redudp_port} {redudp_proxy_host} {redudp_proxy_port} {dnstc_port} {start|stop}"
 }
 
-if [ $# -ne 8 ]; then
+if [ $# -ne 9 ]; then
     usage
     exit 1
 fi
@@ -58,8 +63,9 @@ redsocks_proxy_port="$4"
 redudp_port="$5"
 redudp_proxy_host="$6"
 redudp_proxy_port="$7"
+dnstc_port="$8"
 
-case "$8" in
+case "$9" in
     start)
         echo -n "Setting REDSOCKS firewall rules for interface $device -> $redsocks_port... "
         fw_clear
