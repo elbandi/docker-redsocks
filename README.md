@@ -41,6 +41,34 @@ DNSTC_PORT         Local port for the dnstc listener. Setting this enables dnstc
 DNSTC_IP           Local address for the dnstc listener. (127.0.0.1)
 ```
 
+### Example: proxying another container's traffic
+
+Instead of `--net=host --privileged`, `redsocks` can run on its own Docker network and only needs `--cap-add NET_ADMIN`, since it only manages iptables inside its own network namespace. Other containers can then join that namespace with `--network container:<name>` to have their traffic transparently redirected through the proxy, without needing any iptables setup of their own.
+
+For example, to route traffic through a local Tor SOCKS proxy at `192.168.0.249:9050` (with DNS forced to retry over TCP via `dnstc`), first create the network and start `redsocks` on it:
+
+```
+docker network create tor-net
+
+docker run --rm -it \
+  --name tor-transparent \
+  --cap-add NET_ADMIN --network tor-net \
+  -e REDSOCKS_PROXY=192.168.0.249:9050 \
+  -e DNSTC_PORT=5300 \
+  redsocks
+```
+
+Then, in another terminal, run any container sharing that network namespace:
+
+```
+docker run --rm \
+  --network container:tor-transparent \
+  alpine/curl \
+  https://check.torproject.org/api/ip
+```
+
+If the reported IP is not your own, the traffic is correctly being routed through the proxy.
+
 ### Building
 
 To build the image:
