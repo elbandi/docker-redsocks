@@ -1,0 +1,7 @@
+dnstc {
+    // fake and really dumb DNS server that returns "truncated answer" to
+    // every query via UDP, RFC-compliant resolver should repeat same query
+    // via TCP in this case.
+  local_ip = ${dnstc_ip};
+  local_port = ${dnstc_port};
+}

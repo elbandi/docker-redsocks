@@ -68,6 +68,23 @@ if [ -n "$redudp_proxy" ]; then
         /etc/redsocks_redudp.tmpl >> /tmp/redsocks.conf
 fi
 
+# dnstc is optional, only enabled when DNSTC_PORT is set
+dnstc_port="${DNSTC_PORT}"
+
+if [ -n "$dnstc_port" ]; then
+    dnstc_ip="${DNSTC_IP:-127.0.0.1}"
+
+    if ! [[ "$dnstc_port" =~ ^[0-9]+$ ]] || [ "$dnstc_port" -lt 1 ] || [ "$dnstc_port" -gt 65535 ]; then
+        echo "Invalid DNSTC_PORT: '${dnstc_port}'. Expected value 1-65535." >&2
+        exit 1
+    fi
+
+    echo "Adding dnstc configuration on ${dnstc_ip}:${dnstc_port}..."
+    sed -e "s|\${dnstc_ip}|${dnstc_ip}|" \
+        -e "s|\${dnstc_port}|${dnstc_port}|" \
+        /etc/redsocks_dnstc.tmpl >> /tmp/redsocks.conf
+fi
+
 echo "Generated configuration:"
 cat /tmp/redsocks.conf
 

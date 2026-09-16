@@ -32,7 +32,13 @@ REDUDP_IP          Local address for the redudp listener. (127.0.0.1)
 REDUDP_PORT        Local port for the redudp listener. (10053)
 REDUDP_DEST_IP     Fixed destination address that redirected UDP traffic is expected to reach. (8.8.8.8)
 REDUDP_DEST_PORT   Fixed destination port. (53)
+```
 
+The `dnstc` (fake DNS server that forces resolvers to retry over TCP) feature is optional and disabled by default. It is enabled by setting `DNSTC_PORT`:
+
+```
+DNSTC_PORT         Local port for the dnstc listener. Setting this enables dnstc.
+DNSTC_IP           Local address for the dnstc listener. (127.0.0.1)
 ```
 
 ### Building

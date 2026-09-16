@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y iptables net-tools libevent-2.1-7 libev
 
 COPY redsocks.tmpl /etc/redsocks.tmpl
 COPY redsocks_redudp.tmpl /etc/redsocks_redudp.tmpl
+COPY redsocks_dnstc.tmpl /etc/redsocks_dnstc.tmpl
 COPY entrypoint.sh /entrypoint.sh
 COPY fw.sh /fw.sh
 
