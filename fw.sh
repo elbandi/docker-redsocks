@@ -7,27 +7,19 @@ fw_setup() {
   # First we added a new chain called 'REDSOCKS' to the 'nat' table.
   iptables -t nat -N REDSOCKS
 
-  # Next we used "-j RETURN" rules for the networks we don’t want to use a proxy.
-  # while read item; do
-  #     iptables -t nat -A REDSOCKS -d $item -j RETURN
-  # done < /etc/redsocks-whitelist.txt
-  iptables -t nat -A REDSOCKS -d 0.0.0.0/8 -j RETURN
-#  iptables -t nat -A REDSOCKS -d 10.0.0.0/8 -j RETURN
-#  iptables -t nat -A REDSOCKS -d 100.64.0.0/10 -j RETURN
-  iptables -t nat -A REDSOCKS -d 127.0.0.0/8 -j RETURN
-  iptables -t nat -A REDSOCKS -d 169.254.0.0/16 -j RETURN
-#  iptables -t nat -A REDSOCKS -d 172.16.0.0/12 -j RETURN
-#  iptables -t nat -A REDSOCKS -d 192.168.0.0/16 -j RETURN
-#  iptables -t nat -A REDSOCKS -d 198.18.0.0/15 -j RETURN
-  iptables -t nat -A REDSOCKS -d 224.0.0.0/4 -j RETURN
-#  iptables -t nat -A REDSOCKS -d 240.0.0.0/4 -j RETURN
+  iptables -t nat -A REDSOCKS -o lo -j RETURN
 
-  # We then told iptables to redirect all port 80 connections to the http-relay redsocks port and all other connections to the http-connect redsocks port.
-  # iptables -t nat -A REDSOCKS -p tcp --dport 80 -j REDIRECT --to-ports 12345
-  iptables -t nat -A REDSOCKS -p tcp -j REDIRECT --to-ports $port
+  # Next we used "-j RETURN" rules for the networks we don’t want to use a proxy.
+  while read item; do
+    iptables -t nat -A REDSOCKS -d $item -j RETURN
+  done < /etc/redsocks-whitelist.txt
+
+  iptables -t nat -A REDSOCKS -d $redsocks_proxy_host -p tcp --dport $redsocks_proxy_port -j RETURN
+
+  iptables -t nat -A REDSOCKS -p tcp -j REDIRECT --to-ports $redsocks_port
 
   # Finally we tell iptables to use the ‘REDSOCKS’ chain for all outgoing connection in the network interface ‘eth0′.
-  iptables -t nat -A PREROUTING -i $device -p tcp -j REDSOCKS
+  iptables -t nat -A OUTPUT -o $device -p tcp -j REDSOCKS
 }
 
 ##########################
@@ -40,26 +32,28 @@ fw_clear() {
 }
 
 usage() {
-  echo "Usage: $0 {device} {port} {start|stop}"
+  echo "Usage: $0 {device} {port} {proxy_host} {proxy_port} {start|stop}"
 }
 
-if [ $# -ne 3 ]; then
+if [ $# -ne 5 ]; then
     usage
     exit 1
 fi
 
 device="$1"
-port="$2"
+redsocks_port="$2"
+redsocks_proxy_host="$3"
+redsocks_proxy_port="$4"
 
-case "$3" in
+case "$5" in
     start)
-        echo -n "Setting REDSOCKS firewall rules for interface $device -> $port... "
+        echo -n "Setting REDSOCKS firewall rules for interface $device -> $redsocks_port... "
         fw_clear
         fw_setup
         echo "done."
         ;;
     stop)
-        echo -n "Cleaning REDSOCKS firewall rules for interface $device -> $port... "
+        echo -n "Cleaning REDSOCKS firewall rules for interface $device -> $redsocks_port... "
         fw_clear
         echo "done."
         ;;
