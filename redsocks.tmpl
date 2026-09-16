@@ -7,10 +7,10 @@ base {
 }
 
 redsocks {
-  local_ip = ${ip};
-  local_port = 12345;
+  local_ip = ${redsocks_ip};
+  local_port = ${redsocks_port};
 
-  type = http-connect;
-  ip = ${proxy_ip};
-  port = ${proxy_port};
+  type = ${redsocks_type};
+  ip = ${redsocks_proxy_ip};
+  port = ${redsocks_proxy_port};
 }

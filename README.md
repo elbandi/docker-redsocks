@@ -7,21 +7,32 @@ Wraps [redsocks](https://github.com/darkk/redsocks) in an easy to use Docker ima
 To run:
 
 ```
-docker run --net=host --privileged wheelerlaw/redsocks [-a <listen-addr>] [-p <list-port>] [-t <proxy-url>]
+docker run --net=host --privileged \
+  -e REDSOCKS_IP=<listen-addr> \
+  -e REDSOCKS_PORT=<listen-port> \
+  -e REDSOCKS_DEVICE=<device> \
+  -e REDSOCKS_PROXY=<proxy-ip>:<proxy-port> \
+  wheelerlaw/redsocks
 ```
 
-Options:
+All configuration is done via environment variables:
 
 ```
--a listen-addr         Local address to bind to. (127.0.0.1)
--p listen-port         Local port to bind to. (5053)
--t proxy-URL           Upstream proxy server to forward requests to (http://localhost:3128).
+REDSOCKS_IP        Local address to bind to. (127.0.0.1)
+REDSOCKS_PORT      Local port to bind to. (12345)
+REDSOCKS_DEVICE    Network interface to redirect traffic from. (eth0)
+REDSOCKS_PROXY     Upstream proxy server to forward requests to, as ip:port. (localhost:3128)
 ```
 
-The proxy can also be specified by environment variable:
+The `redudp` (UDP relaying through a SOCKS proxy) feature is optional and disabled by default. They are enabled by setting `REDUDP_PROXY` respectively:
 
 ```
-docker run --net=host --privileged -e http_proxy wheelerlaw/redsocks [-a <listen-addr>] [-p <list-port>]
+REDUDP_PROXY       Upstream SOCKS proxy for UDP relaying, as ip:port. Setting this enables redudp.
+REDUDP_IP          Local address for the redudp listener. (127.0.0.1)
+REDUDP_PORT        Local port for the redudp listener. (10053)
+REDUDP_DEST_IP     Fixed destination address that redirected UDP traffic is expected to reach. (8.8.8.8)
+REDUDP_DEST_PORT   Fixed destination port. (53)
+
 ```
 
 ### Building
@@ -29,23 +40,29 @@ docker run --net=host --privileged -e http_proxy wheelerlaw/redsocks [-a <listen
 To build the image:
 
 ```
-docker build .
+docker build -t redsocks-ubuntu .
+```
+
+An Alpine-based image can be built instead using `Dockerfile.alpine`, which produces a smaller image:
+
+```
+docker build -f Dockerfile.alpine -t redsocks-alpine .
 ```
 
 If you are trying to build the image while behind a proxy, you can specify the proxy server:
 
 ```
-docker build --build-arg "http_proxy=<proxy-URL>" --build-arg "https_proxy=<proxy-URL>" .
+docker build --build-arg "http_proxy=<proxy-URL>" --build-arg "https_proxy=<proxy-URL>" -t redsocks-ubuntu .
 ```
 
 Or if your proxy host is defined in a local environment variable (`http_proxy`):
 
 ```
-docker build --build-arg http_proxy --build-arg https_proxy .
+docker build --build-arg http_proxy --build-arg https_proxy -t redsocks-ubuntu .
 ```
 
 If `http_proxy` is set to `http://localhost:3128` (if you are connecting through Cntlm for example), then it is likely the above commands won't work. You will need to tell the Docker daemon to use the host network stack:
 
 ```
-docker build --build-arg http_proxy --build-arg https_proxy --network=host .
+docker build --build-arg http_proxy --build-arg https_proxy --network=host -t redsocks-ubuntu .
 ```

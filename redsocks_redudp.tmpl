@@ -1,0 +1,13 @@
+redudp {
+  local_ip = ${redudp_ip};
+  local_port = ${redudp_port};
+
+  ip = ${redudp_proxy_ip};
+  port = ${redudp_proxy_port};
+
+  dest_ip = ${redudp_dest_ip};
+  dest_port = ${redudp_dest_port};
+
+  udp_timeout = 30;
+  udp_timeout_stream = 180;
+}

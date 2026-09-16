@@ -1,18 +1,13 @@
-FROM alpine:3.7
+FROM alpine:3.24
 
 MAINTAINER Wheeler Law <whelderwheels613@gmail.com>
 
-RUN apk update && apk add build-base curl libevent-dev iptables-dev bash ca-certificates \
-  && curl -fsSL https://github.com/darkk/redsocks/archive/release-0.5.tar.gz | tar xz \
-  && make -C redsocks-release-0.5/
-
-# Use a multi-stage build to cut down on image size
-FROM alpine:3.7
-RUN apk --no-cache add iptables bash ca-certificates libevent
-COPY --from=0 redsocks-release-0.5/redsocks /usr/local/bin
+RUN apk --no-cache add iptables bash redsocks tcpdump
 
 COPY redsocks.tmpl /etc/redsocks.tmpl
+COPY redsocks_redudp.tmpl /etc/redsocks_redudp.tmpl
 COPY entrypoint.sh /entrypoint.sh
 COPY fw.sh /fw.sh
+COPY whitelist.txt /etc/redsocks-whitelist.txt
 
 ENTRYPOINT ["/entrypoint.sh"]
