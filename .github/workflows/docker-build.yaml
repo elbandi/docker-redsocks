@@ -1,0 +1,59 @@
+name: Create and publish Docker image
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Ubuntu Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: |
+            suffix=-ubuntu
+
+      - name: Extract metadata (tags, labels) for Alpine Docker
+        id: meta_alpine
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: |
+            suffix=-alpine
+
+      - name: Build and push Ubuntu Docker image
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Build and push Alpine Docker image
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          file: Dockerfile.alpine
+          tags: ${{ steps.meta_alpine.outputs.tags }}
+          labels: ${{ steps.meta_alpine.outputs.labels }}
