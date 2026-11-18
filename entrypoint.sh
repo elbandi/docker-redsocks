@@ -17,6 +17,30 @@ if [ -z "$redsocks_proxy_host" ] || [ -z "$redsocks_proxy_port" ] || ! [[ "$reds
     exit 1
 fi
 
+# REDSOCKS_AUTH is optional, only added to the config when set
+redsocks_auth="${REDSOCKS_AUTH}"
+redsocks_auth_conf=""
+
+if [ -n "$redsocks_auth" ]; then
+    case "$redsocks_auth" in
+        *:*) ;;
+        *)
+            echo "Invalid REDSOCKS_AUTH: '${redsocks_auth}'. Expected format user:pass." >&2
+            exit 1
+            ;;
+    esac
+
+    redsocks_login="${redsocks_auth%%:*}"
+    redsocks_password="${redsocks_auth#*:}"
+
+    if [ -z "$redsocks_login" ]; then
+        echo "Invalid REDSOCKS_AUTH: '${redsocks_auth}'. Expected format user:pass." >&2
+        exit 1
+    fi
+
+    redsocks_auth_conf="login = \"${redsocks_login}\"; password = \"${redsocks_password}\";"
+fi
+
 if [ -z "$redsocks_ip" ]; then
     echo "No listening address specified, defaulting to 127.0.0.1"
     redsocks_ip="127.0.0.1"
@@ -33,6 +57,7 @@ sed -e "s|\${redsocks_proxy_ip}|${redsocks_proxy_host}|" \
     -e "s|\${redsocks_ip}|${redsocks_ip}|" \
     -e "s|\${redsocks_port}|${redsocks_port}|" \
     -e "s|\${redsocks_type}|${redsocks_type}|" \
+    -e "s|\${redsocks_auth}|${redsocks_auth_conf}|" \
     /etc/redsocks.tmpl > /tmp/redsocks.conf
 
 # redudp is optional, only enabled when REDUDP_PROXY is set

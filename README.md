@@ -22,6 +22,7 @@ REDSOCKS_IP        Local address to bind to. (127.0.0.1)
 REDSOCKS_PORT      Local port to bind to. (12345)
 REDSOCKS_DEVICE    Network interface to redirect traffic from. (eth0)
 REDSOCKS_PROXY     Upstream proxy server to forward requests to, as ip:port. (localhost:3128)
+REDSOCKS_AUTH      Login credentials for the upstream proxy, as user:pass. Optional; omit for an unauthenticated proxy.
 ```
 
 The `redudp` (UDP relaying through a SOCKS proxy) feature is optional and disabled by default. They are enabled by setting `REDUDP_PROXY` respectively:
